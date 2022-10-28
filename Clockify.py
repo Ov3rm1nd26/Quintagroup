@@ -1,25 +1,65 @@
-import API_KEY_FILE
+from tools import task_list, time_list, number_of_tasks, all_spent_time, task_name, task_date, task_duration
 
-from clockify_api_client.client import ClockifyAPIClient
+import typer
+from rich.console import Console
+from rich.table import Table
 
-API_KEY = API_KEY_FILE.API_KEY
-API_URL = 'api.clockify.me/v1'
+console = Console()
+app = typer.Typer()
 
-client = ClockifyAPIClient().build(API_KEY, API_URL)
 
-workspaces = client.workspaces.get_workspaces()
-workspace_id = workspaces[0]['id']
+@app.command(short_help='Show all tasks')
+def tasks():
+    table = Table(show_header=True, header_style='bold white')
+    table.add_column('№', style='bold white')
+    table.add_column('Task', style='bold white')
 
-projects = client.projects.get_projects(workspace_id)
-project_id = projects[0]['id']
+    for i in range(0, number_of_tasks):
+        table.add_row(str(i + 1), task_list[i])
+        table.add_row()
 
-tasks = client.tasks.get_tasks(workspace_id, project_id)
+    console.print(table)
 
-task_list = [task['name'] for task in tasks[::-1]]
-time_list = [task['duration'][2:] for task in tasks[::-1]]
 
-number_of_tasks = len(task_list)
-all_spent_time = projects[0]['duration'][2:]
+@app.command(short_help='Show all tasks and time spent')
+def task_time():
+    table = Table(show_header=True, header_style='bold white')
+    table.add_column('№', style='bold white')
+    table.add_column('Task', style='bold white')
+    table.add_column('Time spent:', justify='right')
 
-for i in range(0, len(task_list)):
-    print(f'{task_list[i]} \nI spend for this task: {time_list[i]}\n')
+    for i in range(0, number_of_tasks):
+        table.add_row(str(i + 1), task_list[i], time_list[i])
+        table.add_row()
+
+    console.print(table)
+
+
+@app.command(short_help='Show spent time for all tasks')
+def spent_time():
+    table = Table(show_header=True, header_style='bold white')
+    table.add_column('Number of tasks', style='bold white')
+    table.add_column('Time spent:', justify='right')
+
+    table.add_row(str(number_of_tasks), all_spent_time)
+
+    console.print(table)
+
+
+@app.command(short_help='Show spent time for all tasks')
+def log():
+    table = Table(show_header=True, header_style='bold white')
+    table.add_column('Number of log', style='bold white')
+    table.add_column('Task', style='bold white')
+    table.add_column('Time spent:')
+    table.add_column('Date and time:')
+
+    for i in range(0, len(task_name)):
+        table.add_row(str(i + 1), task_name[i], task_duration[i], task_date[i])
+        table.add_row()
+
+    console.print(table)
+
+
+if __name__ == '__main__':
+    app()
